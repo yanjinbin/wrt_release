@@ -55,7 +55,7 @@ on:
         options: [dhcp, router, pppoe]
       LAN_IP:
         required: false
-        description: LAN 地址，留空按模式使用 192.168.2.1 或 192.168.1.1
+        description: LAN 地址；留空时 dhcp 使用 192.168.2.1，router/pppoe 使用 192.168.1.1
         default: ""
       WRT_IP:
         required: false
