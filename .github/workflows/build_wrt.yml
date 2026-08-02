@@ -10,27 +10,12 @@ on:
     inputs:
       model:
         required: true
-        description: Device Model
+        description: 设备型号 value（对应关系见 README）
         type: choice
         default: jdcloud_ipq60xx_immwrt
         options:
-          - aliyun_ap8220_immwrt
-          - aliyun_ap8220_libwrt
-          - cmcc_rax3000m_immwrt
-          - gemtek_w1701k_immwrt
-          - jdcloud_ax6000_immwrt
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
-          - link_nn6000v2_immwrt
-          - linksys_mx4x00_immwrt
-          - qihoo_360v6_immwrt
-          - redmi_ax5_immwrt
-          - redmi_ax6_immwrt
-          - redmi_ax6_libwrt
-          - redmi_ax6000_immwrt21
-          - zn_m2_immwrt
-          - zn_m2_libwrt
-          - x64_immwrt
       MIHOMO_VERSION:
         required: false
         description: mihomo 版本
@@ -100,6 +85,10 @@ jobs:
           PPPOE_PASSWORD_INPUT: ${{ inputs.PPPOE_PASSWORD }}
         run: |
           set -euo pipefail
+          [[ "$MODEL_INPUT" == jdcloud_ipq60xx_immwrt || "$MODEL_INPUT" == jdcloud_ipq60xx_libwrt ]] || {
+            echo "Build WRT 仅支持京东云 AX6600 雅典娜: $MODEL_INPUT" >&2
+            exit 1
+          }
           if [[ "$MODEL_INPUT" == jdcloud_ipq60xx_immwrt || "$MODEL_INPUT" == jdcloud_ipq60xx_libwrt ]]; then
             case "$NET_MODE_INPUT" in
               dhcp|router) ;;
