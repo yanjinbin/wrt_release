@@ -168,8 +168,23 @@ root 密码、WiFi 名称/密码和 PPPoE 账号密码。`pppoe` 模式必须同
 
 ### 固件行为与注意事项
 
-- 默认主题为 `openwrt`；预装 Nikki、mihomo、partexp、ttyd、collectd 统计、Bandix
-  以及 uniwrt/footstrap 主题。
+### AX6600 预装插件与魔改
+
+保留以下插件：
+
+- `luci-app-emmc-health`
+- `luci-app-bandix`
+- `luci-app-quickfile`
+- `luci-app-statistics`
+- `luci-app-ttyd`
+- `luci-app-package-manager`
+- `luci-app-partexp`
+
+并保留之前的 AX6600 魔改：Nikki + mihomo v1.19.27 arm64、OpenWrt 默认主题、
+uniwrt/footstrap/bootstrap 兜底主题、三种网络模式、可定制登录/WiFi、设备信息展示、
+WAN/SSH/ttyd 调试设置、时间域名映射和 NSS/Nikki 注意事项。
+
+- 默认主题为 `openwrt`。
 - 首启将 ttyd/dropbear 设为全接口访问，并将 WAN 入站设为 `ACCEPT`，便于调试。
   完成首次配置后，请在“网络 → 防火墙”把 WAN 入站改回 `REJECT`，并收紧 SSH/ttyd。
 - `time.android.com` 默认映射到 `203.107.6.88`，用于兼容部分安卓 TV 的时间同步。
