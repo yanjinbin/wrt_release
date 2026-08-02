@@ -198,8 +198,9 @@ uniwrt/footstrap/bootstrap 兜底主题、三种网络模式、可定制登录/W
 WAN/SSH/ttyd 调试设置、时间域名映射和 NSS/Nikki 注意事项。
 
 - 默认主题为 `openwrt`。
-- 首启将 ttyd/dropbear 设为全接口访问，并将 WAN 入站设为 `ACCEPT`，便于调试。
-  完成首次配置后，请在“网络 → 防火墙”把 WAN 入站改回 `REJECT`，并收紧 SSH/ttyd。
+- 首启及后续默认都将 ttyd/dropbear 设为全接口访问，并将 WAN 入站保持为 `ACCEPT`。
+  这样可以通过上级路由器网络访问雅典娜的 WAN 地址，不需要把电脑接入雅典娜自身 LAN；该行为不会影响
+  DHCP 模式下 LAN 设备正常访问互联网。请使用自定义 root/WiFi 密码，并避免将 WAN 直接暴露到不可信网络。
 - `time.android.com` 默认映射到 `203.107.6.88`，用于兼容部分安卓 TV 的时间同步。
 - `dhcp` 模式下，NSS/ECM 硬件加速可能绕过 Nikki 透明代理的 nftables tproxy 路径。
   如果客户端流量未进入代理，请检查并按需关闭硬件流量分载。

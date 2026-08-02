@@ -26,7 +26,7 @@ on:
         default: "arm64"
       NET_MODE:
         required: false
-        description: AX6600 网络模式：dhcp/router/pppoe
+        description: AX6600 模式：dhcp/router/pppoe；WAN 入站默认 ACCEPT，可经上级网络访问雅典娜
         type: choice
         default: dhcp
         options: [dhcp, router, pppoe]

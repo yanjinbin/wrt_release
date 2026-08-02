@@ -56,11 +56,11 @@ uci -q set luci.sauth='sauth'
 uci set luci.sauth.cookie_days='365'
 uci set luci.sauth.sessiontime='604800'
 
-# 首次访问便利设置：完成调试后建议把 WAN 入站改回 REJECT。
+# WAN 入站长期保留 ACCEPT，支持通过上级网络访问雅典娜的 WAN 地址。
 WAN_ZONE=$(uci show firewall 2>/dev/null | sed -n "s/^firewall\.@zone\[\([0-9][0-9]*\)\]\.name='wan'$/\1/p" | head -n1)
 [ -n "$WAN_ZONE" ] && uci set "firewall.@zone[$WAN_ZONE].input=ACCEPT"
 
-# ttyd 与 dropbear 不限定接口，便于从 WAN/LAN 调试；完成调试后应收紧防火墙。
+# ttyd 与 dropbear 不限定接口，支持从上级网络或 LAN 访问，按 AX6600 设计长期保留。
 uci -q delete ttyd.@ttyd[0].interface
 uci set dropbear.@dropbear[0].Interface=''
 
