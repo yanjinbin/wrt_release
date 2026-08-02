@@ -20,7 +20,7 @@ sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_e
 ## 3. 获取源码
 
 ```bash
-git clone https://github.com/ZqinKing/wrt_release.git
+git clone https://github.com/yanjinbin/wrt_release.git
 cd wrt_release
 ```
 
@@ -147,3 +147,40 @@ https://github.com/kenzok8/small-package.git
 1. 打开系统设置 → 启动项 → 定位到「appfilter」
 2. 将「appfilter」当前状态从已禁用更改为已启用
 3. 完成配置后，点击启动按钮激活服务
+
+## 10. 京东云 AX6600 雅典娜定制版
+
+`jdcloud_ipq60xx_immwrt` 与 `jdcloud_ipq60xx_libwrt` 使用独立的
+`jdcloud_ax6600` 配置片段，其他设备配置不受本节定制影响。
+
+默认值如下：
+
+| 项目 | 默认值 |
+| --- | --- |
+| 网络模式 | `dhcp`：WAN 自动获取，LAN `192.168.2.1/24` |
+| `router` / `pppoe` LAN | `192.168.1.1/24` |
+| 管理用户 / 密码 | `root` / `666666` |
+| WiFi 名称 / 密码 | `ASUS395` / `yjb123456` |
+| mihomo | `v1.19.27` / `arm64` |
+
+GitHub Actions 可定制网络模式、LAN 地址、管理地址别名（`WRT_IP`）、root
+密码、WiFi 名称/密码和 PPPoE 账号密码。`pppoe` 模式必须同时填写账号与密码。
+
+### 固件行为与注意事项
+
+- 默认主题为 `openwrt`；预装 Nikki、mihomo、partexp、ttyd、collectd 统计、Bandix
+  以及 uniwrt/footstrap 主题。
+- 首启将 ttyd/dropbear 设为全接口访问，并将 WAN 入站设为 `ACCEPT`，便于调试。
+  完成首次配置后，请在“网络 → 防火墙”把 WAN 入站改回 `REJECT`，并收紧 SSH/ttyd。
+- `time.android.com` 默认映射到 `203.107.6.88`，用于兼容部分安卓 TV 的时间同步。
+- `dhcp` 模式下，NSS/ECM 硬件加速可能绕过 Nikki 透明代理的 nftables tproxy 路径。
+  如果客户端流量未进入代理，请检查并按需关闭硬件流量分载。
+- LuCI 系统页和 SSH banner 展示：京东云无线宝 AX6600 雅典娜 · 1G RAM · 128G EMMC ·
+  Quad-core ARM Cortex-A53 @ 1.8GHz；LuCI 概览页型号也会显示该设备信息。
+
+### AX6600 刷机教程
+
+- [恩山论坛：纯小白免拆机避坑刷 JDCloud AX6600 雅典娜经验分享](https://www.right.com.cn/forum/thread-8429666-1-1.html)
+- [京东云 AX6600 雅典娜免拆刷机指南](https://router-docs-sepia.vercel.app/jdcloud-athena-ax6600-flashing.html)
+
+刷机前请备份 U-Boot/分区数据，并按 Release 附带的 `sha256sums.txt` 校验固件。
