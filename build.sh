@@ -419,6 +419,40 @@ apply_config() {
 
 }
 
+rename_firmware_outputs() {
+    local device=$1
+    local firmware_dir=$2
+
+    [[ "$device" == jdcloud_ipq60xx_immwrt || "$device" == jdcloud_ipq60xx_libwrt ]] || return 0
+
+    local old_component='qualcommax-ipq60xx-jdcloud_re-cs-02'
+    local new_component='JDCloud-Athena-AX6600-Qualcomm_IPQ6010-jdcloud_re-cs-02'
+    local source_path
+    local target_path
+    local filename
+    local renamed=0
+
+    while IFS= read -r -d '' source_path; do
+        filename=${source_path##*/}
+        target_path="$firmware_dir/${filename//$old_component/$new_component}"
+
+        if [[ -e "$target_path" ]]; then
+            echo "Error: firmware rename target already exists: $target_path" >&2
+            return 1
+        fi
+
+        mv -- "$source_path" "$target_path"
+        renamed=$((renamed + 1))
+    done < <(find "$firmware_dir" -maxdepth 1 -type f -name "*${old_component}*" -print0)
+
+    if (( renamed == 0 )); then
+        echo "Error: AX6600 firmware filename component not found: $old_component" >&2
+        return 1
+    fi
+
+    echo "Renamed $renamed AX6600 firmware files with component: $new_component"
+}
+
 # 读取设备元信息，确定上游源码和构建目录。
 REPO_URL=$(read_ini_by_key "REPO_URL")
 REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
@@ -471,6 +505,7 @@ FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
 find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.manifest" -o -name "*efi.img.gz" -o -name "*.itb" -o -name "*.fip" -o -name "*.ubi" -o -name "*rootfs.tar.gz" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+rename_firmware_outputs "$Dev" "$FIRMWARE_DIR"
 \rm -f "$BASE_PATH/../firmware/Packages.manifest" 2>/dev/null
 
 if [[ -d action_build ]]; then
