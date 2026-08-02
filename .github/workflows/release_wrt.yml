@@ -26,7 +26,7 @@ on:
         default: "arm64"
       NET_MODE:
         required: false
-        description: AX6600 网络模式：dhcp/router/pppoe
+        description: AX6600 模式：dhcp/router/pppoe；WAN 入站默认 ACCEPT，可经上级网络访问雅典娜
         type: choice
         default: dhcp
         options: [dhcp, router, pppoe]
@@ -449,6 +449,7 @@ jobs:
               done
               echo "- luci-app-nikki + mihomo v${MIHOMO_VERSION_INPUT}（${MIHOMO_PLATFORM_INPUT}）"
               echo "- 默认主题：luci-theme-openwrt；保留 uniwrt/footstrap/bootstrap 兜底主题"
+              echo "- WAN 入站默认 ACCEPT；SSH/ttyd 全接口，可经上级网络访问雅典娜 WAN 地址"
               echo "- AX6600 三种网络模式、默认登录/WiFi、设备信息、NSS/Nikki 注意事项"
             else
               grep -oP 'luci-app(-[a-zA-Z0-9]{1,}){1,}' ./firmware/*.manifest | awk -F: '{print $NF}' || true
