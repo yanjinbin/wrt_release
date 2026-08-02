@@ -1,0 +1,7 @@
+
+# JDCloud AX6600 Athena device label for LuCI overview and ubus system.board.
+case "$(cat /tmp/sysinfo/board_name 2>/dev/null)" in
+	jdcloud,ax6600|jdcloud,re-cs-02)
+		echo "京东云无线宝 AX6600 雅典娜 · 1G RAM · 128G EMMC · Quad-core ARM Cortex-A53 @ 1.8GHz" > /tmp/sysinfo/model
+		;;
+esac

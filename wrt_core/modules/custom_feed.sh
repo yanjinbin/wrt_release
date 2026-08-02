@@ -190,11 +190,16 @@ install_custom_feed() {
     fi
 
     # 统一从外部仓库同步指定包，避免分散维护 feeds.conf。
+    local nikki_repo="https://github.com/nikkinikki-org/OpenWrt-nikki.git"
+    if is_jdcloud_ax6600_build; then
+        nikki_repo="https://github.com/yanjinbin/OpenWrt-nikki.git"
+    fi
+
     custom_feed_sources=(
         "kenzok8/small-package|https://github.com/kenzok8/small-package.git||${base_custom_feed_packages[*]}"
         "sbwml/luci-app-mosdns|https://github.com/sbwml/luci-app-mosdns.git|v5|mosdns luci-app-mosdns"
         "Openwrt-Passwall/openwrt-passwall|https://github.com/Openwrt-Passwall/openwrt-passwall.git|main|luci-app-passwall"
-        "nikkinikki-org/OpenWrt-nikki|https://github.com/nikkinikki-org/OpenWrt-nikki.git|main|nikki luci-app-nikki mihomo-meta"
+        "OpenWrt-nikki|$nikki_repo|main|nikki luci-app-nikki mihomo-meta"
     )
 
     feeds_path=$(get_feeds_path)

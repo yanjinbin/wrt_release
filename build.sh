@@ -195,6 +195,15 @@ fi
 
 validate_build_mode
 
+# AX6600 定制输入使用环境变量承载，未提供时采用固件默认值。
+if [[ "$Dev" == jdcloud_ipq60xx_immwrt || "$Dev" == jdcloud_ipq60xx_libwrt ]]; then
+    export WRT_DEVICE_CONFIG="$Dev"
+    export NET_MODE="${NET_MODE:-dhcp}"
+    export WRT_PW="${WRT_PW:-666666}"
+    export WRT_SSID="${WRT_SSID:-ASUS395}"
+    export WRT_WORD="${WRT_WORD:-yjb123456}"
+fi
+
 read_ini_by_key() {
     local key=$1
     awk -F"=" -v key="$key" '$1 == key {print $2}' "$INI_FILE"
@@ -430,7 +439,7 @@ if [[ -d action_build ]]; then
     BUILD_DIR="action_build"
 fi
 
-"$BASE_PATH/update.sh" "$REPO_URL" "$REPO_BRANCH" "$BUILD_DIR" "$COMMIT_HASH"
+WRT_DEVICE_CONFIG="$Dev" "$BASE_PATH/update.sh" "$REPO_URL" "$REPO_BRANCH" "$BUILD_DIR" "$COMMIT_HASH"
 
 apply_config
 print_config_fragment_summary

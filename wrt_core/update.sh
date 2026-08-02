@@ -26,6 +26,11 @@ GOLANG_BRANCH="26.x"
 THEME_SET="argon"
 LAN_ADDR="192.168.1.1"
 
+if [[ "${WRT_DEVICE_CONFIG:-}" == jdcloud_ipq60xx_immwrt || \
+      "${WRT_DEVICE_CONFIG:-}" == jdcloud_ipq60xx_libwrt ]]; then
+    THEME_SET="openwrt"
+fi
+
 SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 BASE_PATH=${BASE_PATH:-$SCRIPT_DIR}
 
@@ -33,6 +38,7 @@ BASE_PATH=${BASE_PATH:-$SCRIPT_DIR}
 source "$SCRIPT_DIR/modules/network.sh"
 source "$SCRIPT_DIR/modules/repo.sh"
 source "$SCRIPT_DIR/modules/feeds.sh"
+source "$SCRIPT_DIR/modules/jdcloud_ax6600.sh"
 source "$SCRIPT_DIR/modules/custom_feed.sh"
 source "$SCRIPT_DIR/modules/verify.sh"
 source "$SCRIPT_DIR/modules/docker.sh"
@@ -72,6 +78,7 @@ stage_pre_install_source_fixes() {
     # 这里仅修改源码树与 feeds/*，不能依赖 package/feeds/*。
     update_homeproxy
     fix_default_set
+    install_jdcloud_ax6600_customization
     fix_miniupnpd
     update_golang
     change_dnsmasq2full
