@@ -57,7 +57,7 @@ ADD_CONFIG_FRAGMENTS=docker_deps ./build.sh gemtek_w1701k_immwrt config_preview
 REMOVE_CONFIG_FRAGMENTS=proxy ./build.sh x64_immwrt config_preview
 ```
 
-GitHub Actions 的手动构建也提供 `add_fragments` 与 `remove_fragments` 输入项，语义与上述环境变量一致。
+GitHub Actions 表单不暴露配置片段增删项；云编译使用设备配置中声明的默认片段，避免误选。
 
 编译完成后，脚本会从 `<BUILD_DIR>/bin/targets/` 收集固件文件到仓库根目录的 `firmware/`。每次完整构建前会清理旧的目标固件文件，`firmware/Packages.manifest` 会被移除。
 
@@ -67,8 +67,8 @@ GitHub Actions 的手动构建也提供 `add_fragments` 与 `remove_fragments` �
 
 | 厂商 / 平台 | 设备 | 配置名 |
 | --- | --- | --- |
-| 京东云 | 雅典娜(02)、亚瑟(01)、太乙(07)、AX5(JDC版) | `jdcloud_ipq60xx_immwrt` |
-| 京东云 | 雅典娜(02)、亚瑟(01)、太乙(07)、AX5(JDC版) - LiBwrt | `jdcloud_ipq60xx_libwrt` |
+| 京东云 | AX6600 雅典娜（02） | `jdcloud_ipq60xx_immwrt` |
+| 京东云 | AX6600 雅典娜（02）- LiBwrt | `jdcloud_ipq60xx_libwrt` |
 | 京东云 | 百里 / AX6000 | `jdcloud_ax6000_immwrt` |
 | 阿里云 | AP8220 | `aliyun_ap8220_immwrt` |
 | 阿里云 | AP8220 - LiBwrt | `aliyun_ap8220_libwrt` |
@@ -152,6 +152,19 @@ https://github.com/kenzok8/small-package.git
 
 `jdcloud_ipq60xx_immwrt` 与 `jdcloud_ipq60xx_libwrt` 使用独立的
 `jdcloud_ax6600` 配置片段，其他设备配置不受本节定制影响。
+
+GitHub Actions 的 Build/Release 表单直接使用配置 value：
+
+| 表单 value | 对应设备 | 固件源码 | 默认 |
+| --- | --- | --- | --- |
+| `jdcloud_ipq60xx_immwrt` | 京东云 AX6600 雅典娜（`jdcloud_re-cs-02`） | ImmortalWrt | 是 |
+| `jdcloud_ipq60xx_libwrt` | 京东云 AX6600 雅典娜（`jdcloud_re-cs-02`） | LiBwrt | 否 |
+
+两项配置都只编译雅典娜 `jdcloud_re-cs-02`，不会再生成亚瑟 `ss-01`、太乙 `cs-07`
+或 Redmi AX5 JDCloud 固件。
+
+雅典娜配置会把 IPQ6018、PCIe QCN9074 的无线固件，以及 ath11k AHB/PCI 驱动直接编入固件。
+GitHub Actions 可验证这些依赖能被解析和编译；三频 WiFi 是否正常仍需刷机后在真机确认。
 
 默认值如下：
 
