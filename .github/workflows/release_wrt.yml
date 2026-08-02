@@ -1,6 +1,10 @@
 name: Release WRT
 run-name: Release - ${{ inputs.model }}
 
+permissions:
+  actions: write
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -207,9 +211,12 @@ jobs:
       - name: Delete Old Cache
         run: |
           # 获取缓存列表并删除
-          gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
-            gh cache delete "$key"
+          cache_keys=$(gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' || true)
+          while IFS= read -r key; do
+            [ -n "$key" ] || continue
+            gh cache delete "$key" || echo "::warning::无法删除旧缓存，继续发布：$key"
           done
+          <<< "$cache_keys"
           # 输出缓存状态
           echo "========cache status========"
           echo "ccache: $(du -sh ./action_build/.ccache | cut -f 1)"
