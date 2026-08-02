@@ -75,6 +75,10 @@ on:
         description: 备注说明，写入 Release 正文
         default: ""
 
+concurrency:
+  group: wrt-${{ inputs.model }}
+  cancel-in-progress: false
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -84,8 +88,69 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
 
     steps:
+      - name: Fast-fail Inputs
+        env:
+          MODEL_INPUT: ${{ inputs.model }}
+          MIHOMO_VERSION_INPUT: ${{ inputs.MIHOMO_VERSION }}
+          MIHOMO_PLATFORM_INPUT: ${{ inputs.MIHOMO_PLATFORM }}
+          NET_MODE_INPUT: ${{ inputs.NET_MODE }}
+          WRT_IP_INPUT: ${{ inputs.WRT_IP }}
+          WRT_PW_INPUT: ${{ inputs.WRT_PW }}
+          WRT_SSID_INPUT: ${{ inputs.WRT_SSID }}
+          WRT_WORD_INPUT: ${{ inputs.WRT_WORD }}
+          PPPOE_ACCOUNT_INPUT: ${{ inputs.PPPOE_ACCOUNT }}
+          PPPOE_PASSWORD_INPUT: ${{ inputs.PPPOE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ "$MODEL_INPUT" == jdcloud_ipq60xx_immwrt || "$MODEL_INPUT" == jdcloud_ipq60xx_libwrt ]]; then
+            case "$NET_MODE_INPUT" in
+              dhcp|router) ;;
+              pppoe)
+                [[ -n "$PPPOE_ACCOUNT_INPUT" && -n "$PPPOE_PASSWORD_INPUT" ]] || {
+                  echo 'NET_MODE=pppoe 时必须同时填写 PPPoE 账号和密码' >&2
+                  exit 1
+                }
+                ;;
+              *)
+                echo "不支持的 NET_MODE: $NET_MODE_INPUT" >&2
+                exit 1
+                ;;
+            esac
+
+            if [[ -n "$WRT_IP_INPUT" ]]; then
+              [[ "$WRT_IP_INPUT" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
+                echo "WRT_IP 不是有效的 IPv4 地址: $WRT_IP_INPUT" >&2
+                exit 1
+              }
+              IFS=. read -r -a ip_octets <<< "$WRT_IP_INPUT"
+              for octet in "${ip_octets[@]}"; do
+                (( 10#$octet <= 255 )) || {
+                  echo "WRT_IP 不是有效的 IPv4 地址: $WRT_IP_INPUT" >&2
+                  exit 1
+                }
+              done
+            fi
+
+            [[ "$MIHOMO_VERSION_INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "mihomo 版本格式无效: $MIHOMO_VERSION_INPUT" >&2
+              exit 1
+            }
+            [[ "$MIHOMO_PLATFORM_INPUT" =~ ^[a-z0-9._-]+$ ]] || {
+              echo "mihomo 平台格式无效: $MIHOMO_PLATFORM_INPUT" >&2
+              exit 1
+            }
+
+            for value in "$WRT_PW_INPUT" "$WRT_SSID_INPUT" "$WRT_WORD_INPUT" "$PPPOE_ACCOUNT_INPUT" "$PPPOE_PASSWORD_INPUT"; do
+              [[ "$value" != *$'\n'* && "$value" != *$'\r'* ]] || {
+                echo '登录/WiFi/PPPoE 输入不能包含换行' >&2
+                exit 1
+              }
+            done
+          fi
+
       - name: Free Disk Space
         run: |
           sudo rm -rf /usr/local/lib/android || true
@@ -112,13 +177,76 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.0
 
+      - name: Validate Release Inputs
+        env:
+          MODEL_INPUT: ${{ inputs.model }}
+          MIHOMO_VERSION_INPUT: ${{ inputs.MIHOMO_VERSION }}
+          MIHOMO_PLATFORM_INPUT: ${{ inputs.MIHOMO_PLATFORM }}
+          NET_MODE_INPUT: ${{ inputs.NET_MODE }}
+          WRT_IP_INPUT: ${{ inputs.WRT_IP }}
+          WRT_PW_INPUT: ${{ inputs.WRT_PW }}
+          WRT_SSID_INPUT: ${{ inputs.WRT_SSID }}
+          WRT_WORD_INPUT: ${{ inputs.WRT_WORD }}
+          PPPOE_ACCOUNT_INPUT: ${{ inputs.PPPOE_ACCOUNT }}
+          PPPOE_PASSWORD_INPUT: ${{ inputs.PPPOE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -f "wrt_core/compilecfg/${MODEL_INPUT}.ini"
+
+          if [[ "$MODEL_INPUT" == jdcloud_ipq60xx_immwrt || "$MODEL_INPUT" == jdcloud_ipq60xx_libwrt ]]; then
+            case "$NET_MODE_INPUT" in
+              dhcp|router) ;;
+              pppoe)
+                [[ -n "$PPPOE_ACCOUNT_INPUT" && -n "$PPPOE_PASSWORD_INPUT" ]] || {
+                  echo 'NET_MODE=pppoe 时必须同时填写 PPPoE 账号和密码' >&2
+                  exit 1
+                }
+                ;;
+              *)
+                echo "不支持的 NET_MODE: $NET_MODE_INPUT" >&2
+                exit 1
+                ;;
+            esac
+
+            if [[ -n "$WRT_IP_INPUT" ]]; then
+              [[ "$WRT_IP_INPUT" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
+                echo "WRT_IP 不是有效的 IPv4 地址: $WRT_IP_INPUT" >&2
+                exit 1
+              }
+              IFS=. read -r -a ip_octets <<< "$WRT_IP_INPUT"
+              for octet in "${ip_octets[@]}"; do
+                (( 10#$octet <= 255 )) || {
+                  echo "WRT_IP 不是有效的 IPv4 地址: $WRT_IP_INPUT" >&2
+                  exit 1
+                }
+              done
+            fi
+
+            [[ "$MIHOMO_VERSION_INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "mihomo 版本格式无效: $MIHOMO_VERSION_INPUT" >&2
+              exit 1
+            }
+            [[ "$MIHOMO_PLATFORM_INPUT" =~ ^[a-z0-9._-]+$ ]] || {
+              echo "mihomo 平台格式无效: $MIHOMO_PLATFORM_INPUT" >&2
+              exit 1
+            }
+
+            for value in "$WRT_PW_INPUT" "$WRT_SSID_INPUT" "$WRT_WORD_INPUT" "$PPPOE_ACCOUNT_INPUT" "$PPPOE_PASSWORD_INPUT"; do
+              [[ "$value" != *$'\n'* && "$value" != *$'\r'* ]] || {
+                echo '登录/WiFi/PPPoE 输入不能包含换行' >&2
+                exit 1
+              }
+            done
+          fi
+
       - name: Set Build Date and Timezone
         run: |
+          set -euo pipefail
           sudo -E timedatectl set-timezone "Asia/Shanghai"
-          export BUILD_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
+          export BUILD_DATE=$(TZ=Asia/Shanghai date +"%y.%m.%d_%H.%M.%S")
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
-          export BUILD_SRC=$(awk -F"=" '/REPO_URL/ {print $NF}' "./wrt_core/compilecfg/${{ inputs.model }}.ini")
-          echo "BUILD_SRC=$BUILD_SRC" >> $GITHUB_ENV
+          BUILD_SRC=$(awk -F"=" '/^REPO_URL=/ {print $2; exit}' "./wrt_core/compilecfg/${{ inputs.model }}.ini")
+          printf 'BUILD_SRC=%s\n' "$BUILD_SRC" >> "$GITHUB_ENV"
 
       - name: Pre Clone
         run: ./wrt_core/pre_clone_action.sh ${{ inputs.model }}
@@ -183,8 +311,15 @@ jobs:
 
       - name: Get Kernel Verion
         run: |
-          # 获取内核版本
-          echo "KVER=$(grep -oP "^kernel.*" ./firmware/*.manifest | grep -oP "[4-6]\.[0-9]{1,3}\.[0-9]{1,3}")" >> $GITHUB_ENV
+          set -euo pipefail
+          KVER=$(grep -h -oP '^kernel.*' ./firmware/*.manifest 2>/dev/null \
+            | grep -oP '[4-6]\.[0-9]{1,3}\.[0-9]{1,3}' \
+            | head -n 1 || true)
+          if [[ -z "$KVER" ]]; then
+            echo '::warning::未能从 manifest 提取内核版本，将使用 unknown-kernel'
+            KVER=unknown-kernel
+          fi
+          printf 'KVER=%s\n' "$KVER" >> "$GITHUB_ENV"
 
       - name: Delete Old Cache
         run: |
@@ -193,8 +328,7 @@ jobs:
           while IFS= read -r key; do
             [ -n "$key" ] || continue
             gh cache delete "$key" || echo "::warning::无法删除旧缓存，继续发布：$key"
-          done
-          <<< "$cache_keys"
+          done <<< "$cache_keys"
           # 输出缓存状态
           echo "========cache status========"
           echo "ccache: $(du -sh ./action_build/.ccache | cut -f 1)"
@@ -309,8 +443,28 @@ jobs:
             fi
             echo "KMOD归档：${KMOD_ARCHIVE}"
             echo ""
-            echo "## 插件"
-            grep -oP 'luci-app(-[a-zA-Z0-9]{1,}){1,}' ./firmware/*.manifest | awk -F: '{print $NF}' || true
+            echo "## AX6600 预装插件与魔改"
+            if [[ "$model" == jdcloud_ipq60xx_immwrt || "$model" == jdcloud_ipq60xx_libwrt ]]; then
+              for package in \
+                luci-app-emmc-health \
+                luci-app-bandix \
+                luci-app-quickfile \
+                luci-app-statistics \
+                luci-app-ttyd \
+                luci-app-package-manager \
+                luci-app-partexp; do
+                if grep -q "$package" ./firmware/*.manifest; then
+                  echo "- $package"
+                else
+                  echo "- $package（manifest 未检测到）"
+                fi
+              done
+              echo "- luci-app-nikki + mihomo v${MIHOMO_VERSION_INPUT}（${MIHOMO_PLATFORM_INPUT}）"
+              echo "- 默认主题：luci-theme-openwrt；保留 uniwrt/footstrap/bootstrap 兜底主题"
+              echo "- AX6600 三种网络模式、默认登录/WiFi、设备信息、NSS/Nikki 注意事项"
+            else
+              grep -oP 'luci-app(-[a-zA-Z0-9]{1,}){1,}' ./firmware/*.manifest | awk -F: '{print $NF}' || true
+            fi
             if [[ -n "$REMARK" ]]; then
               echo ""
               echo "## 备注"
