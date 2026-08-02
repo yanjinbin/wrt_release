@@ -163,8 +163,8 @@ https://github.com/kenzok8/small-package.git
 | WiFi 名称 / 密码 | `ASUS395` / `yjb123456` |
 | mihomo | `v1.19.27` / `arm64` |
 
-GitHub Actions 可定制网络模式、LAN 地址、管理地址别名（`WRT_IP`）、root
-密码、WiFi 名称/密码和 PPPoE 账号密码。`pppoe` 模式必须同时填写账号与密码。
+GitHub Actions 可定制设备型号、mihomo 版本/平台、网络模式、管理地址（`WRT_IP`）、
+root 密码、WiFi 名称/密码和 PPPoE 账号密码。`pppoe` 模式必须同时填写账号与密码。
 
 ### 固件行为与注意事项
 
